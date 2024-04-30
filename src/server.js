@@ -4,15 +4,28 @@ const path = require("path");
 const { getUserId } = require("./utils");
 
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
 
 const Query = require("./resolvers/Query");
 const Mutation = require("./resolvers/Mutation");
 const Link = require("./resolvers/Link");
 const User = require("./resolvers/User");
+const Subscription = require("./resolvers/Subscription");
 
 // リゾルバ関数
-const resolvers = { Query, Mutation, Link, User };
+const resolvers = {
+  Link,
+  Mutation,
+  Query,
+  Subscription,
+  User,
+};
+
+// サブスクリプション実装
+const { PubSub } = require("apollo-server");
+
+// context
+const pubsub = new PubSub();
+const prisma = new PrismaClient();
 
 const server = new ApolloServer({
   typeDefs: fs.readFileSync(path.join(__dirname, "schema.graphql"), "utf-8"),
@@ -21,6 +34,7 @@ const server = new ApolloServer({
     return {
       ...req,
       prisma,
+      pubsub,
       userId: req && req.headers.authorization ? getUserId(req) : null,
     }; //コンテキストに渡すことでresolvers()で使えるようになる
   },
